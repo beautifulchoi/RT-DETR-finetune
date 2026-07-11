@@ -3,7 +3,7 @@ set -euo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-PYTHON_BIN="${PYTHON_BIN:-.venv/bin/python}"
+PYTHON_BIN="${PYTHON_BIN:-python}"
 CONFIG="${CONFIG:-configs/rtdetrv2/rtdetrv2_r18vd_binary_person_coco128.yml}"
 CHECKPOINT="${CHECKPOINT:-output/rtdetrv2_r18vd_binary_person_coco128/best.pth}"
 INPUT="${INPUT:-dataset/coco128_binary/images/train2017/000000000086.jpg}"

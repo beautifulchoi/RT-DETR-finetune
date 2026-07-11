@@ -90,20 +90,19 @@ reproducible from the preparation script.
 
 ## Environment Setup
 
-From the repository root:
+This workflow assumes you use your local Python environment directly. From the repository root:
 
 ```bash
 cd rtdetrv2_pytorch
-python3 -m venv .venv
-.venv/bin/python -m pip install --upgrade pip
-.venv/bin/python -m pip install -r requirements.txt
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
 On Apple Silicon or CPU-only environments, if the full requirements are too
 heavy, the verified minimum for the smoke workflow was:
 
 ```bash
-.venv/bin/python -m pip install torch torchvision PyYAML faster-coco-eval scipy tensorboard
+python -m pip install torch torchvision PyYAML faster-coco-eval scipy tensorboard
 ```
 
 ## Prepare the Custom Binary Dataset
@@ -112,7 +111,7 @@ Run:
 
 ```bash
 cd rtdetrv2_pytorch
-.venv/bin/python tools/prepare_binary_coco128.py --force
+python tools/prepare_binary_coco128.py --force
 ```
 
 Expected result:
@@ -132,7 +131,7 @@ Important checks performed by the script:
 To convert a different COCO class later:
 
 ```bash
-.venv/bin/python tools/prepare_binary_coco128.py --target-class car --force
+python tools/prepare_binary_coco128.py --target-class car --force
 ```
 
 If the target class changes, also update the dataset config annotation filenames
@@ -147,7 +146,7 @@ Run:
 
 ```bash
 cd rtdetrv2_pytorch
-.venv/bin/python tools/train.py \
+python tools/train.py \
   -c configs/rtdetrv2/rtdetrv2_r18vd_binary_person_coco128.yml \
   --device cpu \
   --seed 0
@@ -198,7 +197,7 @@ To evaluate a trained checkpoint on the binary validation split:
 
 ```bash
 cd rtdetrv2_pytorch
-.venv/bin/python tools/train.py \
+python tools/train.py \
   -c configs/rtdetrv2/rtdetrv2_r18vd_binary_person_coco128.yml \
   -r output/rtdetrv2_r18vd_binary_person_coco128/best.pth \
   --test-only \
@@ -238,7 +237,7 @@ Run inference on one validation image with the inference-only Python script:
 
 ```bash
 cd rtdetrv2_pytorch
-.venv/bin/python tools/infer_binary.py \
+python tools/infer_binary.py \
   -c configs/rtdetrv2/rtdetrv2_r18vd_binary_person_coco128.yml \
   -r output/rtdetrv2_r18vd_binary_person_coco128/best.pth \
   -i dataset/coco128_binary/images/train2017/000000000086.jpg \
@@ -272,7 +271,7 @@ The older deploy reference script is still available:
 
 ```bash
 cd rtdetrv2_pytorch
-.venv/bin/python references/deploy/rtdetrv2_torch.py \
+python references/deploy/rtdetrv2_torch.py \
   -c configs/rtdetrv2/rtdetrv2_r18vd_binary_person_coco128.yml \
   -r output/rtdetrv2_r18vd_binary_person_coco128/best.pth \
   -f dataset/coco128_binary/images/train2017/000000000086.jpg \
