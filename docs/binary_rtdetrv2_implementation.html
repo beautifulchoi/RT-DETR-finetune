@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Binary RT-DETRv2 Implementation Summary</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172026;
+      --muted: #5b6670;
+      --line: #d7dee5;
+      --soft: #f5f7fa;
+      --accent: #226f6a;
+      --accent-soft: #e8f4f2;
+      --warn: #8a5a00;
+      --warn-soft: #fff5d8;
+      --code: #10202a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: #ffffff;
+      line-height: 1.55;
+    }
+
+    main {
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 40px 0 56px;
+    }
+
+    header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 24px;
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 32px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 34px 0 12px;
+      font-size: 21px;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 22px 0 8px;
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 12px;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.94em;
+      color: var(--code);
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      padding: 1px 5px;
+    }
+
+    pre {
+      overflow: auto;
+      background: #111a20;
+      color: #e9f2f6;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    pre code {
+      color: inherit;
+      background: transparent;
+      border: 0;
+      padding: 0;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: var(--soft);
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 20px;
+      margin-bottom: 2px;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .callout {
+      border: 1px solid #b9d7d2;
+      background: var(--accent-soft);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 18px 0;
+    }
+
+    .note {
+      border: 1px solid #ead58a;
+      background: var(--warn-soft);
+      color: var(--warn);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 16px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 22px;
+      table-layout: fixed;
+    }
+
+    th,
+    td {
+      border: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      padding: 10px 12px;
+      overflow-wrap: anywhere;
+    }
+
+    th {
+      background: var(--soft);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+
+    ul {
+      margin: 8px 0 18px 22px;
+      padding: 0;
+    }
+
+    li {
+      margin: 6px 0;
+    }
+
+    .diagram-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfd;
+      padding: 12px;
+      margin: 12px 0 22px;
+    }
+
+    svg {
+      display: block;
+      min-width: 940px;
+      width: 100%;
+      height: auto;
+    }
+
+    .box {
+      fill: #ffffff;
+      stroke: #8ca2af;
+      stroke-width: 1.3;
+      rx: 8;
+    }
+
+    .box-accent {
+      fill: #e8f4f2;
+      stroke: #226f6a;
+    }
+
+    .box-warn {
+      fill: #fff5d8;
+      stroke: #b68112;
+    }
+
+    .arrow {
+      stroke: #6b7b85;
+      stroke-width: 1.7;
+      marker-end: url(#arrowhead);
+    }
+
+    .label {
+      font-size: 14px;
+      fill: #172026;
+      font-weight: 650;
+    }
+
+    .sub {
+      font-size: 12px;
+      fill: #5b6670;
+    }
+
+    footer {
+      margin-top: 36px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 760px) {
+      main {
+        width: min(100% - 28px, 1120px);
+        padding-top: 28px;
+      }
+
+      .summary {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 26px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Binary RT-DETRv2 Implementation Summary</h1>
+      <p>
+        This document explains what changed in the local project and how the
+        custom one-class object detection dataset flows through training and inference.
+      </p>
+      <p>
+        Project root:
+        <code>/Users/yjchoi/Documents/poscodx_intern/rtdetrv2_pytorch</code>
+      </p>
+      <div class="summary">
+        <div class="metric">
+          <strong>1 class</strong>
+          <span>person vs background</span>
+        </div>
+        <div class="metric">
+          <strong>128 images</strong>
+          <span>COCO128 converted to COCO JSON</span>
+        </div>
+        <div class="metric">
+          <strong>1 epoch</strong>
+          <span>CPU smoke training verified</span>
+        </div>
+      </div>
+    </header>
+
+    <section>
+      <h2>What Changed</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Change</th>
+            <th>Why</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>tools/prepare_binary_coco128.py</code></td>
+            <td>
+              New dataset preparation script. It downloads COCO128, reads YOLO labels,
+              keeps only the selected foreground class, remaps it to category id
+              <code>0</code>, and writes COCO-style annotations.
+            </td>
+            <td>
+              RT-DETRv2 already consumes COCO JSON through <code>CocoDetection</code>,
+              so conversion keeps the project on its existing data path.
+            </td>
+          </tr>
+          <tr>
+            <td><code>configs/dataset/coco128_person_detection.yml</code></td>
+            <td>
+              New dataset config with <code>num_classes: 1</code>,
+              <code>remap_mscoco_category: False</code>, and paths to
+              <code>person_train.json</code> and <code>person_val.json</code>.
+            </td>
+            <td>
+              Defines the binary detector task as <code>person</code> foreground
+              versus background/no target.
+            </td>
+          </tr>
+          <tr>
+            <td><code>configs/rtdetrv2/rtdetrv2_r18vd_binary_person_coco128.yml</code></td>
+            <td>
+              New smoke-training model config based on RT-DETRv2 R18. It uses
+              <code>160x160</code> images, batch size <code>2</code>, one epoch,
+              CPU-friendly settings, and COCO checkpoint tuning.
+            </td>
+            <td>
+              Makes verification fast while still exercising the real detector,
+              criterion, postprocessor, checkpoint loading, and evaluator.
+            </td>
+          </tr>
+          <tr>
+            <td><code>references/deploy/rtdetrv2_torch.py</code></td>
+            <td>
+              Updated to add the repo root to <code>sys.path</code>, use
+              <code>eval_spatial_size</code> from the config instead of hardcoded
+              <code>640x640</code>, and accept <code>--threshold</code>.
+            </td>
+            <td>
+              Lets inference work with the small binary smoke config and local
+              command-line execution.
+            </td>
+          </tr>
+          <tr>
+            <td><code>.gitignore</code></td>
+            <td>
+              Ignores generated datasets, checkpoints, the local virtualenv,
+              Python caches, and rendered result images.
+            </td>
+            <td>
+              Keeps reproducible source files separate from heavy generated artifacts.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Procedure Diagram</h2>
+      <div class="diagram-wrap" aria-label="Binary RT-DETRv2 workflow diagram">
+        <svg viewBox="0 0 1040 430" role="img">
+          <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#6b7b85"></polygon>
+            </marker>
+          </defs>
+
+          <rect class="box" x="28" y="40" width="180" height="82"></rect>
+          <text class="label" x="48" y="72">COCO128 zip</text>
+          <text class="sub" x="48" y="96">YOLO images + labels</text>
+
+          <line class="arrow" x1="208" y1="81" x2="270" y2="81"></line>
+
+          <rect class="box-accent" x="270" y="34" width="220" height="94" rx="8"></rect>
+          <text class="label" x="292" y="66">prepare_binary_coco128.py</text>
+          <text class="sub" x="292" y="91">keep person boxes only</text>
+          <text class="sub" x="292" y="110">preserve negative images</text>
+
+          <line class="arrow" x1="490" y1="81" x2="550" y2="81"></line>
+
+          <rect class="box" x="550" y="40" width="210" height="82"></rect>
+          <text class="label" x="572" y="72">Binary COCO JSON</text>
+          <text class="sub" x="572" y="96">category id 0 = person</text>
+
+          <line class="arrow" x1="655" y1="122" x2="655" y2="180"></line>
+
+          <rect class="box" x="542" y="180" width="226" height="90"></rect>
+          <text class="label" x="564" y="213">Dataset config</text>
+          <text class="sub" x="564" y="237">num_classes: 1</text>
+          <text class="sub" x="564" y="255">CocoDetection loader</text>
+
+          <line class="arrow" x1="542" y1="225" x2="480" y2="225"></line>
+
+          <rect class="box-accent" x="242" y="176" width="238" height="98" rx="8"></rect>
+          <text class="label" x="264" y="208">RT-DETRv2 binary config</text>
+          <text class="sub" x="264" y="232">R18 model, 160x160 smoke run</text>
+          <text class="sub" x="264" y="251">COCO tuning checkpoint</text>
+
+          <line class="arrow" x1="361" y1="274" x2="361" y2="330"></line>
+
+          <rect class="box-warn" x="246" y="330" width="230" height="74" rx="8"></rect>
+          <text class="label" x="268" y="361">Training verification</text>
+          <text class="sub" x="268" y="384">last.pth, best.pth, COCO eval</text>
+
+          <line class="arrow" x1="476" y1="367" x2="560" y2="367"></line>
+
+          <rect class="box" x="560" y="330" width="214" height="74"></rect>
+          <text class="label" x="582" y="361">Inference smoke</text>
+          <text class="sub" x="582" y="384">labels only 0, result image</text>
+
+          <line class="arrow" x1="760" y1="81" x2="828" y2="81"></line>
+
+          <rect class="box" x="828" y="40" width="184" height="82"></rect>
+          <text class="label" x="850" y="72">Validation checks</text>
+          <text class="sub" x="850" y="96">positive + negative splits</text>
+        </svg>
+      </div>
+    </section>
+
+    <section>
+      <h2>Dataset Conversion</h2>
+      <p>
+        The custom dataset is generated at
+        <code>dataset/coco128_binary</code>. The converter produces:
+      </p>
+      <ul>
+        <li><code>annotations/person_train.json</code></li>
+        <li><code>annotations/person_val.json</code></li>
+        <li><code>images/train2017/</code> with the COCO128 images used by both splits</li>
+      </ul>
+      <p>
+        Verification result: <code>103</code> train images, <code>25</code> validation
+        images, and <code>254</code> person boxes. Both splits contain positive images
+        and negative/background images.
+      </p>
+    </section>
+
+    <section>
+      <h2>Commands Used</h2>
+      <h3>Prepare the binary dataset</h3>
+      <pre><code>.venv/bin/python tools/prepare_binary_coco128.py --force</code></pre>
+
+      <h3>Train on the custom dataset</h3>
+      <pre><code>.venv/bin/python tools/train.py \
+  -c configs/rtdetrv2/rtdetrv2_r18vd_binary_person_coco128.yml \
+  --device cpu \
+  --seed 0</code></pre>
+
+      <h3>Run inference smoke test</h3>
+      <pre><code>.venv/bin/python references/deploy/rtdetrv2_torch.py \
+  -c configs/rtdetrv2/rtdetrv2_r18vd_binary_person_coco128.yml \
+  -r output/rtdetrv2_r18vd_binary_person_coco128/best.pth \
+  -f dataset/coco128_binary/images/train2017/000000000086.jpg \
+  -d cpu \
+  --threshold 0.01</code></pre>
+    </section>
+
+    <section>
+      <h2>Verification Results</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Check</th>
+            <th>Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Annotation categories</td>
+            <td>Only <code>{id: 0, name: person}</code></td>
+          </tr>
+          <tr>
+            <td>Annotation validity</td>
+            <td>No invalid boxes; all annotation image references are valid</td>
+          </tr>
+          <tr>
+            <td>Data-loader smoke</td>
+            <td>Batch shape <code>(2, 3, 160, 160)</code>, <code>num_classes: 1</code></td>
+          </tr>
+          <tr>
+            <td>Training smoke</td>
+            <td>One epoch completed on CPU with <code>52</code> batches</td>
+          </tr>
+          <tr>
+            <td>Evaluation</td>
+            <td>COCO bbox evaluation completed. AP@[0.50:0.95] = <code>0.059</code></td>
+          </tr>
+          <tr>
+            <td>Artifacts</td>
+            <td>
+              <code>last.pth</code>, <code>best.pth</code>,
+              <code>checkpoint0000.pth</code>, and <code>log.txt</code>
+              under <code>output/rtdetrv2_r18vd_binary_person_coco128</code>
+            </td>
+          </tr>
+          <tr>
+            <td>Inference labels</td>
+            <td>Predicted labels were constrained to class <code>0</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        The current training run is intentionally a small smoke test. It proves that
+        the binary dataset, model head, checkpoint tuning, training loop, evaluator,
+        and inference path work. It is not intended as a production-quality detector.
+      </div>
+    </section>
+
+    <section>
+      <h2>How to Adapt This Later</h2>
+      <ul>
+        <li>
+          To target another COCO class, rerun
+          <code>tools/prepare_binary_coco128.py --target-class car --force</code>
+          and update the dataset config annotation filenames if the class name changes.
+        </li>
+        <li>
+          For better model quality, increase <code>epoches</code>, use a larger
+          <code>eval_spatial_size</code>, and train on a larger custom dataset.
+        </li>
+        <li>
+          For GPU training, switch <code>--device cpu</code> to the available CUDA
+          device and revisit batch size and AMP settings.
+        </li>
+      </ul>
+    </section>
+
+    <footer>
+      Generated for the binary RT-DETRv2 person-vs-background implementation in
+      <code>poscodx_intern</code>.
+    </footer>
+  </main>
+</body>
+</html>

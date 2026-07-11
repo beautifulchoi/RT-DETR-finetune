@@ -1,0 +1,74 @@
+__include__: [
+  '../dataset/coco128_person_detection.yml',
+  '../runtime.yml',
+  './include/dataloader.yml',
+  './include/optimizer.yml',
+  './include/rtdetrv2_r50vd.yml',
+]
+
+output_dir: ./output/rtdetrv2_r18vd_binary_person_coco128
+tuning: https://github.com/lyuwenyu/storage/releases/download/v0.2/rtdetrv2_r18vd_120e_coco_rerun_48.1.pth
+
+sync_bn: False
+use_amp: False
+use_ema: False
+eval_spatial_size: [160, 160]
+epoches: 1
+print_freq: 1
+
+PResNet:
+  depth: 18
+  freeze_at: -1
+  freeze_norm: False
+  pretrained: False
+
+HybridEncoder:
+  in_channels: [128, 256, 512]
+  hidden_dim: 256
+  expansion: 0.5
+
+RTDETRTransformerv2:
+  num_layers: 3
+  num_denoising: 20
+  num_queries: 100
+
+RTDETRPostProcessor:
+  num_top_queries: 100
+
+optimizer:
+  type: AdamW
+  params:
+    -
+      params: '^(?=.*(?:norm|bn)).*$'
+      weight_decay: 0.
+  lr: 0.0001
+  betas: [0.9, 0.999]
+  weight_decay: 0.0001
+
+lr_warmup_scheduler:
+  warmup_duration: 10
+
+train_dataloader:
+  dataset:
+    transforms:
+      ops:
+        - {type: RandomHorizontalFlip}
+        - {type: Resize, size: [160, 160]}
+        - {type: SanitizeBoundingBoxes, min_size: 1}
+        - {type: ConvertPILImage, dtype: 'float32', scale: True}
+        - {type: ConvertBoxes, fmt: 'cxcywh', normalize: True}
+      policy: ~
+  collate_fn:
+    scales: ~
+  total_batch_size: 2
+  num_workers: 0
+  drop_last: False
+
+val_dataloader:
+  dataset:
+    transforms:
+      ops:
+        - {type: Resize, size: [160, 160]}
+        - {type: ConvertPILImage, dtype: 'float32', scale: True}
+  total_batch_size: 2
+  num_workers: 0
