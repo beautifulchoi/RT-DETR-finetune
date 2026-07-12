@@ -11,8 +11,8 @@ train_dataloader:
   type: DataLoader
   dataset:
     type: CocoDetection
-    img_folder: ./dataset/coco128_binary/images/train2017/
-    ann_file: ./dataset/coco128_binary/annotations/person_train.json
+    img_folder: ./dataset/custom_binary/images/
+    ann_file: ./dataset/custom_binary/annotations/person_train.json
     return_masks: False
     transforms:
       type: Compose
@@ -27,8 +27,8 @@ val_dataloader:
   type: DataLoader
   dataset:
     type: CocoDetection
-    img_folder: ./dataset/coco128_binary/images/train2017/
-    ann_file: ./dataset/coco128_binary/annotations/person_val.json
+    img_folder: ./dataset/custom_binary/images/
+    ann_file: ./dataset/custom_binary/annotations/person_val.json
     return_masks: False
     transforms:
       type: Compose

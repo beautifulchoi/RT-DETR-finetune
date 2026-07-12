@@ -4,6 +4,7 @@ __pycache__/
 *.py[cod]
 .venv/
 rtdetrv2_pytorch/.venv/
+rtdetrv2_pytorch/dataset/custom_binary/
 rtdetrv2_pytorch/dataset/coco128_binary/
 rtdetrv2_pytorch/output/
 rtdetrv2_pytorch/results_*.jpg

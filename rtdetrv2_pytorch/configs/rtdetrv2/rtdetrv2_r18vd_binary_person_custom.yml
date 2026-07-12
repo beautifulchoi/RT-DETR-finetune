@@ -1,12 +1,12 @@
 __include__: [
-  '../dataset/coco128_person_detection.yml',
+  '../dataset/custom_person_detection.yml',
   '../runtime.yml',
   './include/dataloader.yml',
   './include/optimizer.yml',
   './include/rtdetrv2_r50vd.yml',
 ]
 
-output_dir: ./output/rtdetrv2_r18vd_binary_person_coco128
+output_dir: ./output/rtdetrv2_r18vd_binary_person_custom
 tuning: https://github.com/lyuwenyu/storage/releases/download/v0.2/rtdetrv2_r18vd_120e_coco_rerun_48.1.pth
 
 sync_bn: False

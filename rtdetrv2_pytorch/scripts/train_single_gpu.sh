@@ -3,8 +3,8 @@ set -euo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-PYTHON_BIN="${PYTHON_BIN:-python}"
-CONFIG="${CONFIG:-configs/rtdetrv2/rtdetrv2_r18vd_binary_person_coco128.yml}"
+PYTHON_BIN="${PYTHON_BIN:-python3}"
+CONFIG="${CONFIG:-configs/rtdetrv2/rtdetrv2_r18vd_binary_person_custom.yml}"
 DEVICE="${DEVICE:-cuda:0}"
 SEED="${SEED:-0}"
 CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0}"

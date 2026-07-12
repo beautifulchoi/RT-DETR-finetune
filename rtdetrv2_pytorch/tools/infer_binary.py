@@ -32,13 +32,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "-c",
         "--config",
-        default="configs/rtdetrv2/rtdetrv2_r18vd_binary_person_coco128.yml",
+        default="configs/rtdetrv2/rtdetrv2_r18vd_binary_person_custom.yml",
         help="RT-DETRv2 config path",
     )
     parser.add_argument(
         "-r",
         "--resume",
-        default="output/rtdetrv2_r18vd_binary_person_coco128/best.pth",
+        default="output/rtdetrv2_r18vd_binary_person_custom/best.pth",
         help="trained checkpoint path",
     )
     parser.add_argument(

@@ -260,7 +260,7 @@
         </div>
         <div class="metric">
           <strong>128 images</strong>
-          <span>COCO128 converted to COCO JSON</span>
+          <span>Custom binary dataset converted to COCO JSON</span>
         </div>
         <div class="metric">
           <strong>1 epoch</strong>
@@ -281,9 +281,9 @@
         </thead>
         <tbody>
           <tr>
-            <td><code>tools/prepare_binary_coco128.py</code></td>
+            <td><code>tools/prepare_binary_custom.py</code></td>
             <td>
-              New dataset preparation script. It downloads COCO128, reads YOLO labels,
+              New dataset preparation script. It converts a custom YOLO-format dataset, reads labels,
               keeps only the selected foreground class, remaps it to category id
               <code>0</code>, and writes COCO-style annotations.
             </td>
@@ -293,7 +293,7 @@
             </td>
           </tr>
           <tr>
-            <td><code>configs/dataset/coco128_person_detection.yml</code></td>
+            <td><code>configs/dataset/custom_person_detection.yml</code></td>
             <td>
               New dataset config with <code>num_classes: 1</code>,
               <code>remap_mscoco_category: False</code>, and paths to
@@ -305,7 +305,7 @@
             </td>
           </tr>
           <tr>
-            <td><code>configs/rtdetrv2/rtdetrv2_r18vd_binary_person_coco128.yml</code></td>
+            <td><code>configs/rtdetrv2/rtdetrv2_r18vd_binary_person_custom.yml</code></td>
             <td>
               New smoke-training model config based on RT-DETRv2 R18. It uses
               <code>160x160</code> images, batch size <code>2</code>, one epoch,
@@ -353,13 +353,13 @@
           </defs>
 
           <rect class="box" x="28" y="40" width="180" height="82"></rect>
-          <text class="label" x="48" y="72">COCO128 zip</text>
+          <text class="label" x="48" y="72">Custom YOLO dataset</text>
           <text class="sub" x="48" y="96">YOLO images + labels</text>
 
           <line class="arrow" x1="208" y1="81" x2="270" y2="81"></line>
 
           <rect class="box-accent" x="270" y="34" width="220" height="94" rx="8"></rect>
-          <text class="label" x="292" y="66">prepare_binary_coco128.py</text>
+          <text class="label" x="292" y="66">prepare_binary_custom.py</text>
           <text class="sub" x="292" y="91">keep person boxes only</text>
           <text class="sub" x="292" y="110">preserve negative images</text>
 
@@ -408,36 +408,40 @@
       <h2>Dataset Conversion</h2>
       <p>
         The custom dataset is generated at
-        <code>dataset/coco128_binary</code>. The converter produces:
+        <code>dataset/custom_binary</code>. The converter produces:
       </p>
       <ul>
         <li><code>annotations/person_train.json</code></li>
         <li><code>annotations/person_val.json</code></li>
-        <li><code>images/train2017/</code> with the COCO128 images used by both splits</li>
+        <li><code>images/train/</code> and <code>images/val/</code> with converted custom images</li>
       </ul>
       <p>
-        Verification result: <code>103</code> train images, <code>25</code> validation
-        images, and <code>254</code> person boxes. Both splits contain positive images
-        and negative/background images.
+        Verification result: <code>2</code> train images, <code>2</code> validation
+        images, and <code>2</code> person boxes from a synthetic custom YOLO dataset.
+        Both splits contain one positive image and one negative/background image.
       </p>
     </section>
 
     <section>
       <h2>Commands Used</h2>
       <h3>Prepare the binary dataset</h3>
-      <pre><code>.venv/bin/python tools/prepare_binary_coco128.py --force</code></pre>
+      <pre><code>python3 tools/prepare_binary_custom.py \
+  --source-root /private/tmp/rtdetr_custom_raw \
+  --target-class-id 0 \
+  --target-class-name person \
+  --force</code></pre>
 
       <h3>Train on the custom dataset</h3>
-      <pre><code>.venv/bin/python tools/train.py \
-  -c configs/rtdetrv2/rtdetrv2_r18vd_binary_person_coco128.yml \
+      <pre><code>python3 tools/train.py \
+  -c configs/rtdetrv2/rtdetrv2_r18vd_binary_person_custom.yml \
   --device cpu \
   --seed 0</code></pre>
 
       <h3>Run inference smoke test</h3>
-      <pre><code>.venv/bin/python references/deploy/rtdetrv2_torch.py \
-  -c configs/rtdetrv2/rtdetrv2_r18vd_binary_person_coco128.yml \
-  -r output/rtdetrv2_r18vd_binary_person_coco128/best.pth \
-  -f dataset/coco128_binary/images/train2017/000000000086.jpg \
+      <pre><code>python3 references/deploy/rtdetrv2_torch.py \
+  -c configs/rtdetrv2/rtdetrv2_r18vd_binary_person_custom.yml \
+  -r output/rtdetrv2_r18vd_binary_person_custom/best.pth \
+  -f dataset/custom_binary/images/val/person_101.jpg \
   -d cpu \
   --threshold 0.01</code></pre>
     </section>
@@ -466,23 +470,23 @@
           </tr>
           <tr>
             <td>Training smoke</td>
-            <td>One epoch completed on CPU with <code>52</code> batches</td>
+            <td>One epoch completed on CPU with <code>1</code> batch</td>
           </tr>
           <tr>
             <td>Evaluation</td>
-            <td>COCO bbox evaluation completed. AP@[0.50:0.95] = <code>0.059</code></td>
+            <td>COCO bbox evaluation completed. AP@[0.50:0.95] = <code>0.003</code></td>
           </tr>
           <tr>
             <td>Artifacts</td>
             <td>
               <code>last.pth</code>, <code>best.pth</code>,
               <code>checkpoint0000.pth</code>, and <code>log.txt</code>
-              under <code>output/rtdetrv2_r18vd_binary_person_coco128</code>
+              under <code>output/rtdetrv2_r18vd_binary_person_custom</code>
             </td>
           </tr>
           <tr>
             <td>Inference labels</td>
-            <td>Predicted labels were constrained to class <code>0</code></td>
+            <td>Inference completed from the custom checkpoint; output JSON and rendered image were written</td>
           </tr>
         </tbody>
       </table>
@@ -498,8 +502,8 @@
       <h2>How to Adapt This Later</h2>
       <ul>
         <li>
-          To target another COCO class, rerun
-          <code>tools/prepare_binary_coco128.py --target-class car --force</code>
+          To target another class, rerun
+          <code>tools/prepare_binary_custom.py --source-root dataset/custom_raw --target-class-id 2 --target-class-name car --force</code>
           and update the dataset config annotation filenames if the class name changes.
         </li>
         <li>
