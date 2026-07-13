@@ -272,6 +272,22 @@ For a quick smoke dataset only, you can run:
 python3 tools/prepare_binary_custom.py --download-sample --force
 ```
 
+Before CUDA training, validate the generated COCO JSON files:
+
+```bash
+python3 tools/validate_binary_coco.py \
+  dataset/custom_binary/annotations/person_train.json \
+  dataset/custom_binary/annotations/person_val.json \
+  --num-classes 1 \
+  --expected-category-id 0 \
+  --expected-category-name person
+```
+
+If you see a CUDA index error in `matcher.py` near `out_prob ** self.gamma`,
+check this validator first. With `num_classes: 1`, every annotation must use
+`category_id: 0`. A common mistake is keeping original COCO ids such as
+`category_id: 1` for `person`; that will index outside the one-class model head.
+
 ## Fine-Tune for 1 Epoch
 
 The included config is a fast CPU smoke config. It uses `160x160` images so the
